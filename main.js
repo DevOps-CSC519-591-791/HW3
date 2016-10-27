@@ -100,33 +100,27 @@ app.get('/listservers', function(req, res) {
 });
 
 app.get('/spawn', function(req, res) {
-	client.sadd("serverSet", 'http://0.0.0.0:' + portNum, function(err, value){
-		// if certain port is not used, then creating a server listening this port
+	// if certain port is not used, then creating a server listening this port
+	console.log("port: " + portNum);
+	client.scard("serverSet", function(err, value){
 		if (err) throw err
-		var currLen = 0;
-		client.scard("serverSet", function(err, value){
-			if (err) throw err
-		  	currLen = value;
-  			console.log("serverSetLen: " + serverSetLen);
-  			console.log("currLen: " + currLen);
-  			console.log("==============================");
-  			// If new port can be added into serverSet, creating new server.
-  			if(currLen > serverSetLen){
-				var server = app.listen(portNum, function() {
-					var host = server.address().address
-					var port = server.address().port
-					serverSetLen = currLen;
-					client.sadd("serverSet", 'http://0.0.0.0:' + portNum);
-					console.log('A new app listening at http://%s:%s', host, port)
-				});
-			} else {
-				console.log("Port " + portNum + " has already been occupied.")
-			}
-		 });
+	  	serverSetLen = value;
+		console.log("serverSetLen: " + serverSetLen);
+		console.log("---------------");
 
-		portNum += 1;
-		res.end();
-	});
+		var server = app.listen(portNum, function() {
+			var host = server.address().address
+			var port = server.address().port
+			serverSetLen += 1;
+			client.sadd("serverSet", 'http://0.0.0.0:' + portNum);
+			console.log('A new app listening at http://%s:%s', host, port)
+			console.log("serverSetLen: " + serverSetLen);
+			console.log("===================================");
+		});
+	 });
+
+	portNum += 1;
+	res.end();
 });
 
 app.get('/destroy', function(req, res) {
@@ -153,7 +147,7 @@ app.get('/destroy', function(req, res) {
 })
 
 // HTTP SERVER
-var server = app.listen(3000, function() {
+var server = app.listen(portNum, function() {
   var host = server.address().address
   var port = server.address().port
   // Delete existing key
@@ -168,6 +162,8 @@ var server = app.listen(3000, function() {
 
   console.log('Queues app listening at http://%s:%s', host, port)
 })
+		console.log("port: " + portNum);
+
 // client.lpush("serverList", server);
 // // same web routes with different ports.
 // var server1 = app.listen(3001, function () {
