@@ -3,13 +3,26 @@ var multer  = require('multer');
 var express = require('express');
 var fs      = require('fs');
 var app 	= express();
+var http 	= require('http');
+var httpProxy = require('http-proxy');
 var portNum	= 3000;
 var serverSetLen = 0;
 // REDIS
 var client = redis.createClient(6379, '127.0.0.1', {});
 
-///////////// WEB ROUTES
+// HTTP Proxy
+var proxy = httpProxy.createProxyServer({});
+var proxyServer = http.createServer(function(req, res){
+	client.spop("serverSet", function(err, serverDetail){
+		console.log("Current proxy server is " + serverDetail);
+		proxy.web(req, res, {target: serverDetail});
+		client.sadd("serverSet", serverDetail);
+	});
+});
+proxyServer.listen(8080);
+console.log("Proxy server is listening at http://%s:%s", proxyServer.address().address, proxyServer.address().port);
 
+///////////// WEB ROUTES
 // Add hook to make it easier to get all visited URLS.
 // output example
 // "GET /get", "GET" is the req.method, "/get" is the req.url
@@ -160,17 +173,4 @@ var server = app.listen(portNum, function() {
  //  });
 
   console.log('Queues app listening at http://%s:%s', host, port)
-})
-		console.log("port: " + portNum);
-
-// client.lpush("serverList", server);
-// // same web routes with different ports.
-// var server1 = app.listen(3001, function () {
-
-//   var host = server1.address().address
-//   var port = server1.address().port
-
-//   console.log('Queues app listening at http://%s:%s', host, port)
-// })
-// client.lpush("serverList", server1);
-
+});
