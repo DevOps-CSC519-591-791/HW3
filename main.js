@@ -103,19 +103,19 @@ app.get('/spawn', function(req, res) {
 	client.sadd("serverSet", 'http://0.0.0.0:' + portNum, function(err, value){
 		// if certain port is not used, then creating a server listening this port
 		if (err) throw err
-		var tempLen = 0;
+		var currLen = 0;
 		client.scard("serverSet", function(err, value){
 			if (err) throw err
-		  	tempLen = value;
+		  	currLen = value;
   			console.log("serverSetLen: " + serverSetLen);
-  			console.log("tempLen: " + tempLen);
+  			console.log("currLen: " + currLen);
   			console.log("==============================");
   			// If new port can be added into serverSet, creating new server.
-  			if(tempLen > serverSetLen){
+  			if(currLen > serverSetLen){
 				var server = app.listen(portNum, function() {
 					var host = server.address().address
 					var port = server.address().port
-					serverSetLen = tempLen;
+					serverSetLen = currLen;
 					client.sadd("serverSet", 'http://0.0.0.0:' + portNum);
 					console.log('A new app listening at http://%s:%s', host, port)
 				});
@@ -156,13 +156,15 @@ app.get('/destroy', function(req, res) {
 var server = app.listen(3000, function() {
   var host = server.address().address
   var port = server.address().port
+  // Delete existing key
+  client.del("serverSet");
   client.sadd("serverSet", 'http://0.0.0.0:' + port);
   // asynchronously obtain length of the server list
-  client.scard("serverSet", function(err, value){
-	if (err) throw err
-  	serverSetLen = value;
-  	console.log("serverSetLen: " + serverSetLen);
-  });
+ //  client.scard("serverSet", function(err, value){
+	// if (err) throw err
+ //  	serverSetLen = value;
+ //  	console.log("serverSetLen: " + serverSetLen);
+ //  });
 
   console.log('Queues app listening at http://%s:%s', host, port)
 })
