@@ -63,7 +63,7 @@ app.post('/upload',[ multer({ dest: './uploads/'}), function(req, res){
    if( req.files.image )
    {
 	   fs.readFile( req.files.image.path, function (err, data) {
-	  		if (err) throw err;
+	  		if(err) throw err;
 	  		var img = new Buffer(data).toString('base64');
 	  		//store images to Redis
 	  		client.lpush("imageStack", img);
@@ -77,7 +77,7 @@ app.post('/upload',[ multer({ dest: './uploads/'}), function(req, res){
 
 app.get('/meow', function(req, res) {
 	client.lrange("imageStack", 0, -1, function(err, items){
-		if (err) throw err
+		if(err) throw err
 		res.writeHead(200, {'content-type':'text/html'});
 		items.forEach(function (imagedata) 
 		{
@@ -90,7 +90,7 @@ app.get('/meow', function(req, res) {
 
 app.get('/listservers', function(req, res) {
 	client.smembers("serverSet", function(err, servers){
-		if (err) throw err
+		if(err) throw err
 		res.writeHead(200, {'content-type':'text/html'});
 		servers.forEach(function (serverDetail){
 			res.write("<p>" + serverDetail + "</p>");
@@ -101,9 +101,8 @@ app.get('/listservers', function(req, res) {
 
 app.get('/spawn', function(req, res) {
 	// if certain port is not used, then creating a server listening this port
-	console.log("port: " + portNum);
 	client.scard("serverSet", function(err, value){
-		if (err) throw err
+		if(err) throw err
 	  	serverSetLen = value;
 		console.log("serverSetLen: " + serverSetLen);
 		console.log("---------------");
@@ -117,27 +116,27 @@ app.get('/spawn', function(req, res) {
 			console.log("serverSetLen: " + serverSetLen);
 			console.log("===================================");
 		});
-	 });
-
+	});
 	portNum += 1;
 	res.end();
 });
 
 app.get('/destroy', function(req, res) {
-	client.spop("serverSet", function(err, port){
+	client.scard("serverSet", function(err, value){
 		// If more than one server in redis set, we can delete random one
 		// Destroying all servers is undefined behavior.
-		if (err) throw err
-		client.scard("serverSet", function(err, value){
-			if (err) throw err
-		  	serverSetLen = value;
-  			console.log("serverSetLen: " + serverSetLen);
-		 });
+		if(err) throw err
+		serverSetLen = value;
 		if(serverSetLen > 1){
-			var server = app.listen(port);
-			server.close(function(err, value){
-				if (err) throw err
-				console.log('A server is deleted successfully.');
+			client.spop("serverSet", function(err, serverDetail){
+				if(err) throw err
+			  	var server = app.listen(serverDetail.match(/[0-9]{4}/)[0]);
+				server.close(function(err, value){
+					if(err) throw err
+					serverSetLen -= 1;
+					console.log("A server (" + serverDetail + ") is deleted successfully.");
+	  				console.log("serverSetLen: " + serverSetLen);
+				});
 			});
 		} else {
 			console.log('There is only one server left, you cannot delete it.');
@@ -155,7 +154,7 @@ var server = app.listen(portNum, function() {
   client.sadd("serverSet", 'http://0.0.0.0:' + port);
   // asynchronously obtain length of the server list
  //  client.scard("serverSet", function(err, value){
-	// if (err) throw err
+	// if(err) throw err
  //  	serverSetLen = value;
  //  	console.log("serverSetLen: " + serverSetLen);
  //  });
