@@ -88,6 +88,17 @@ app.get('/meow', function(req, res) {
 	});
 })
 
+app.get('/listservers', function(req, res) {
+	client.smembers("serverSet", function(err, servers){
+		if (err) throw err
+		res.writeHead(200, {'content-type':'text/html'});
+		servers.forEach(function (serverDetail){
+			res.write("<p>" + serverDetail + "</p>");
+		});
+		res.end();
+	});
+});
+
 app.get('/spawn', function(req, res) {
 	client.sadd("serverSet", 'http://0.0.0.0:' + portNum, function(err, value){
 		// if certain port is not used, then creating a server listening this port
