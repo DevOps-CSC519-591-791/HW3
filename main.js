@@ -62,8 +62,11 @@ app.get('/set/:key', function(req, res){
 });
 
 app.get('/get', function(req, res){
-	res.send(client.get("Zhewei", function(err,value){ console.log(value)}));
-	console.log("===================================");
+	client.get("Zhewei", function(err,value){ 
+		res.send(value);
+		console.log(value);
+		console.log("===================================");
+	});
 });
 
 app.get('/recent', function(req, res){
