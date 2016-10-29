@@ -22,7 +22,7 @@ var proxyServer = http.createServer(function(req, res){
 	});
 });
 proxyServer.listen(8080);
-console.log("Proxy server is listening at http://%s:%s", proxyServer.address().address, proxyServer.address().port);
+console.log("The proxy server delivers requests to http://%s:%s", proxyServer.address().address, proxyServer.address().port);
 
 ///////////// WEB ROUTES
 // Add hook to make it easier to get all visited URLS.
