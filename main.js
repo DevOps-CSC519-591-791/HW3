@@ -5,6 +5,8 @@ var fs      = require('fs');
 var app 	= express();
 var http 	= require('http');
 var httpProxy = require('http-proxy');
+var HashMap = require("hashmap");
+var serverHashMap = new HashMap();
 var portNum	= 3000;
 var serverSetLen = 0;
 // REDIS
@@ -40,29 +42,34 @@ app.use(function(req, res, next)
 });
 
 app.get('/', function(req, res) {
+	console.log("===================================");
 	res.send('hello world!');
 });
 
 app.get('/set', function(req, res){
 	client.set("Zhewei", "Awesome");
 	client.expire("Zhewei", 10);
-	res.send("Key set.");
+	console.log("===================================");
+	res.send("Key set. Only last for 10 seconds.");
 });
 
 app.get('/set/:key', function(req, res){
 	client.set("Zhewei", req.params.key);
 	client.expire("Zhewei", 10);
 	//Must have res.send(), otherwise server will waiting response forever...
-	res.send("Key set."); 
+	console.log("===================================");
+	res.send("Key set. Only last for 10 seconds."); 
 });
 
 app.get('/get', function(req, res){
 	res.send(client.get("Zhewei", function(err,value){ console.log(value)}));
+	console.log("===================================");
 });
 
 app.get('/recent', function(req, res){
 	client.lrange("recentUrl", 0, -1, function(err, value){
 		console.log(value);
+		console.log("===================================");
 		res.send(value);
 	});
 });
@@ -83,6 +90,7 @@ app.post('/upload',[ multer({ dest: './uploads/'}), function(req, res){
 	  		// Keep 3 recent images in stack
 	  		client.ltrim("imageStack", 0, 2);
 	  		console.log('Upload one image successfully!');
+			console.log("===================================");
 		});
 	}
    res.status(204).end();
@@ -96,7 +104,7 @@ app.get('/meow', function(req, res) {
 		{
 			res.write("<h1>\n<img src='data:my_pic.jpg;base64,"+imagedata+"'/>");
 		});
-
+		console.log("===================================");
 		res.end();
 	});
 })
@@ -108,6 +116,7 @@ app.get('/listservers', function(req, res) {
 		servers.forEach(function (serverDetail){
 			res.write("<p>" + serverDetail + "</p>");
 		});
+		console.log("===================================");
 		res.end();
 	});
 });
@@ -129,6 +138,7 @@ app.get('/spawn', function(req, res) {
 			console.log("serverSetLen: " + serverSetLen);
 			console.log("===================================");
 		});
+		serverHashMap.set(portNum, server);
 	});
 	portNum += 1;
 	res.end();
@@ -143,16 +153,20 @@ app.get('/destroy', function(req, res) {
 		if(serverSetLen > 1){
 			client.spop("serverSet", function(err, serverDetail){
 				if(err) throw err
-			  	var server = app.listen(serverDetail.match(/[0-9]{4}/)[0]);
+				var port = parseInt(serverDetail.match(/[0-9]{4}/)[0]);
+				var server = serverHashMap.get(port);
+			  	// var server = app.listen(serverDetail.match(/[0-9]{4}/)[0]);
 				server.close(function(err, value){
 					if(err) throw err
 					serverSetLen -= 1;
 					console.log("A server (" + serverDetail + ") is deleted successfully.");
 	  				console.log("serverSetLen: " + serverSetLen);
+					console.log("===================================");
 				});
 			});
 		} else {
 			console.log('There is only one server left, you cannot delete it.');
+			console.log("===================================");
 		}
 		res.send();
 	})
@@ -174,3 +188,4 @@ var server = app.listen(portNum, function() {
 
   console.log('Queues app listening at http://%s:%s', host, port)
 });
+serverHashMap.set(3000, server);
