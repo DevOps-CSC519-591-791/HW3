@@ -3,6 +3,7 @@ HW3
 
 ### Setup
 
+ - [Screencast](https://www.youtube.com/watch?v=Qnph0_ACDxc)
  - Run `sudo npm install` to install the dependencies.
  - Run `node main.js` to start the Proxy server.
 
@@ -34,8 +35,11 @@ app.get('/set/:key', function(req, res){
 });
 
 app.get('/get', function(req, res){
-	res.send(client.get("Zhewei", function(err,value){ console.log(value)}));
-	console.log("===================================");
+	client.get("Zhewei", function(err,value){ 
+		res.send(value);
+		console.log(value);
+		console.log("===================================");
+	});
 });
 ```
 
