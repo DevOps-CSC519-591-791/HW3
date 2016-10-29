@@ -3,6 +3,7 @@ HW3
 
 ### Setup
 
+ - ![Screencast](https://www.youtube.com/watch?v=Qnph0_ACDxc)
  - Run `sudo npm install` to install the dependencies.
  - Run `node main.js` to start the Proxy server.
 
